@@ -78,27 +78,38 @@
         }
         
         .day-header {
-            text-align: center;
-            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
             padding-bottom: 8px;
             border-bottom: 1px solid #dee2e6;
+        }
+        
+        .day-title {
+            font-weight: bold;
             font-size: 1.1rem;
+            flex: 1;
+            text-align: center;
         }
         
-        .weekend {
-            background-color: #f8f9fa;
-        }
-        
-        .weekend .day-header {
-            background-color: #f8d9d9;
-            border-radius: 3px;
-        }
-        
-        .today-header {
+        .today-header .day-title {
             background-color: var(--primary-color);
             color: white;
             border-radius: 3px;
+            padding: 2px 8px;
+        }
+        
+        .weekend-header .day-title {
+            background-color: #f8d9d9;
+            border-radius: 3px;
+            padding: 2px 8px;
+        }
+        
+        .add-slot-btn {
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            margin-left: 5px;
         }
         
         .time-slot {
@@ -219,7 +230,6 @@
 <body>
     <div class="container">
         
-
         <div class="row">
             <div class="col-lg-8">
                 <div class="slots-container">
@@ -300,7 +310,7 @@
                             <label for="clientName" class="form-label">Имя клиента</label>
                             <input type="text" class="form-control" id="clientName" required>
                         </div>
-                        <div class="mb-3">
+                        <div classmb-3">
                             <label for="phone" class="form-label">Телефон</label>
                             <input type="tel" class="form-control" id="phone" required>
                         </div>
@@ -532,28 +542,6 @@
                 alert(`Слот ${time} добавлен для даты ${formatDate(date)}`);
             }
             
-            // Функция удаления кастомного слота
-            function removeCustomSlot(date, time) {
-                if (confirm(`Удалить слот ${time} для даты ${formatDate(date)}?`)) {
-                    const customSlots = JSON.parse(localStorage.getItem('customSlots'));
-                    
-                    if (customSlots[date]) {
-                        const index = customSlots[date].indexOf(time);
-                        if (index !== -1) {
-                            customSlots[date].splice(index, 1);
-                            
-                            // Удаляем дату, если больше нет слотов
-                            if (customSlots[date].length === 0) {
-                                delete customSlots[date];
-                            }
-                            
-                            localStorage.setItem('customSlots', JSON.stringify(customSlots));
-                            generateSlotsView();
-                        }
-                    }
-                }
-            }
-            
             // Функция генерации представления слотов
             function generateSlotsView() {
                 const slotsGrid = document.getElementById('slotsGrid');
@@ -590,13 +578,29 @@
                     const dayElement = document.createElement('div');
                     dayElement.className = `day-column ${isWeekend ? 'weekend' : ''} ${isToday ? 'current-date' : ''}`;
                     
+                    // Создаем заголовок дня
                     const dayHeader = document.createElement('div');
-                    dayHeader.className = `day-header ${isToday ? 'today-header' : ''}`;
+                    dayHeader.className = `day-header ${isToday ? 'today-header' : ''} ${isWeekend ? 'weekend-header' : ''}`;
+                    
+                    const dayTitle = document.createElement('div');
+                    dayTitle.className = 'day-title';
                     
                     const shortDayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
                     // Формат: "Пн, 12.03"
-                    dayHeader.innerHTML = `${shortDayNames[i]}, ${dayDate.getDate()}.${String(dayDate.getMonth() + 1).padStart(2, '0')}`;
+                    dayTitle.textContent = `${shortDayNames[i]}, ${dayDate.getDate()}.${String(dayDate.getMonth() + 1).padStart(2, '0')}`;
                     
+                    // Кнопка добавления слота для этого дня
+                    const addSlotBtn = document.createElement('button');
+                    addSlotBtn.className = 'btn btn-sm btn-outline-primary add-slot-btn';
+                    addSlotBtn.innerHTML = '<i class="bi bi-plus"></i>';
+                    addSlotBtn.title = 'Добавить слот для этой даты';
+                    addSlotBtn.addEventListener('click', function() {
+                        document.getElementById('customSlotDate').value = dayStr;
+                        document.getElementById('customSlotTime').focus();
+                    });
+                    
+                    dayHeader.appendChild(dayTitle);
+                    dayHeader.appendChild(addSlotBtn);
                     dayElement.appendChild(dayHeader);
                     
                     // Получаем все слоты для этого дня (стандартные + кастомные)
@@ -887,7 +891,7 @@
                 alert('Все данные были удалены');
             }
             
-            // Вспомогательная функция для форматирования даты
+            // Вспомогательная функция для форматирования дата
             function formatDate(dateString) {
                 const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
                 return new Date(dateString).toLocaleDateString('ru-RU', options);
