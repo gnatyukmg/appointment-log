@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Журнал записи на приём</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container {
+            max-width: 1800px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .slots-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .slots-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .week-navigation {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .week-range {
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .day-column {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: var(--light-color);
+            padding: 10px;
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .day-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .today-header .day-title {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 3px;
+            padding: 2px 8px;
+        }
+        
+        .weekend-header .day-title {
+            background-color: #f8d9d9;
+            border-radius: 3px;
+            padding: 2px 8px;
+        }
+        
+        .add-slot-btn {
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            margin-left: 5px;
+        }
+        
+        .time-slot {
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .time-slot.free {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+        
+        .time-slot.busy {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+        
+        .time-slot:hover {
+            transform: scale(1.03);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .time-slots-panel {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .appointment-form-panel {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .stats-panel {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .slot-badge {
+            cursor: pointer;
+            margin: 3px;
+        }
+        
+        .slot-badge:hover {
+            opacity: 0.8;
+        }
+        
+        .current-date {
+            background-color: #e3f2fd !important;
+            border: 2px solid var(--primary-color) !important;
+        }
+        
+        @media (max-width: 768px) {
+            .slots-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .btn-group-responsive {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .btn-group-responsive .btn {
+                margin-bottom: 5px;
+            }
+        }
+        
+        .modal-content {
+            border-radius: 10px;
+        }
+        
+        .badge-sm {
+            font-size: 0.7rem;
+        }
+        
+        .appointment-info {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .weekend-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .hosting-section {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .hosting-option {
+            border-left: 4px solid #0d6efd;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="slots-container">
+                    <div class="slots-header">
+                        <div class="week-navigation">
+                            <button class="btn btn-outline-primary" id="prevWeekBtn">
+                                <i class="bi bi-chevron-left"></i> Пред.
+                            </button>
+                            <div class="week-range" id="currentWeekRange"></div>
+                            <button class="btn btn-outline-primary" id="nextWeekBtn">
+                                След. <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="weekend-toggle">
+                            <input type="checkbox" class="btn-check" id="showWeekendsToggle" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="showWeekendsToggle">Показать выходные</label>
+                        </div>
+                    </div>
+                    
+                    <div class="slots-grid" id="slotsGrid">
+                        <!-- Slots will be generated here -->
+                    </div>
+                </div>
+                
+                <div class="time-slots-panel">
+                    <h4><i class="bi bi-clock"></i> Управление временными слотами</h4>
+                    <div class="mb-3">
+                        <label class="form-label">Стандартные временные слоты:</label>
+                        <div id="timeSlotsContainer">
+                            <span class="badge bg-primary slot-badge" data-time="09:00">09:00</span>
+                            <span class="badge bg-primary slot-badge" data-time="14:00">14:00</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Добавить слот для выбранной даты:</label>
+                        <div class="input-group mb-2">
+                            <input type="date" class="form-control" id="customSlotDate">
+                            <input type="time" class="form-control" id="customSlotTime">
+                            <button class="btn btn-success" id="addCustomSlotBtn"><i class="bi bi-plus-circle"></i> Добавить</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group mb-2">
+                                <input type="time" class="form-control" id="newTimeSlot">
+                                <button class="btn btn-success" id="addTimeSlotBtn"><i class="bi bi-plus-circle"></i> Добавить стандартный слот</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-danger" id="clearTimeSlotsBtn"><i class="bi bi-trash"></i> Сбросить к стандартным слотам</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="appointment-form-panel">
+                    <h4><i class="bi bi-pencil-square"></i> Форма записи</h4>
+                    <form id="appointmentForm">
+                        <input type="hidden" id="editIndex" value="-1">
+                        <div class="mb-3">
+                            <label for="selectedDate" class="form-label">Дата приёма</label>
+                            <input type="date" class="form-control" id="selectedDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="selectedTime" class="form-label">Время приёма</label>
+                            <input type="time" class="form-control" id="selectedTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="carBrand" class="form-label">Марка автомобиля</label>
+                            <input type="text" class="form-control" id="carBrand" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="carModel" class="form-label">Модель автомобиля</label>
+                            <input type="text" class="form-control" id="carModel" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="clientName" class="form-label">Имя клиента</label>
+                            <input type="text" class="form-control" id="clientName" required>
+                        </div>
+                        <div classmb-3">
+                            <label for="phone" class="form-label">Телефон</label>
+                            <input type="tel" class="form-control" id="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Комментарий</label>
+                            <textarea class="form-control" id="comment" rows="2"></textarea>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="submitBtn"><i class="bi bi-check-circle"></i> Добавить запись</button>
+                            <button type="button" class="btn btn-secondary" id="cancelEditBtn" style="display: none;"><i class="bi bi-x-circle"></i> Отменить редактирование</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="stats-panel mt-4">
+                    <h4><i class="bi bi-bar-chart"></i> Статистика</h4>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="card text-center mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title" id="totalRecords">0</h5>
+                                    <p class="card-text">Всего записей</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card text-center mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title" id="todayRecords">0</h5>
+                                    <p class="card-text">Записей сегодня</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-outline-danger btn-sm w-100" id="clearStorageBtn"><i class="bi bi-trash"></i> Очистить все данные</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h3><i class="bi bi-list-check"></i> Список записей</h3>
+            <div class="input-group mb-3">
+                <input type="date" class="form-control" id="searchDate">
+                <button class="btn btn-outline-secondary" id="searchBtn"><i class="bi bi-search"></i> Поиск по дате</button>
+                <button class="btn btn-outline-secondary" id="showAllBtn"><i class="bi bi-card-list"></i> Показать все</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Дата</th>
+                            <th>Время</th>
+                            <th>Марка</th>
+                            <th>Модель</th>
+                            <th>Клиент</th>
+                            <th>Телефон</th>
+                            <th>Комментарий</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTable">
+                        <!-- Записи будут добавляться здесь -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация данных
+            if (!localStorage.getItem('timeSlots')) {
+                localStorage.setItem('timeSlots', JSON.stringify(['09:00', '14:00']));
+            }
+            
+            if (!localStorage.getItem('appointments')) {
+                localStorage.setItem('appointments', JSON.stringify([]));
+            }
+            
+            if (!localStorage.getItem('customSlots')) {
+                localStorage.setItem('customSlots', JSON.stringify({}));
+            }
+            
+            // Текущая дата и неделя
+            let currentDate = new Date();
+            let currentWeekStart = new Date(currentDate);
+            currentWeekStart.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Начало недели (понедельник)
+            
+            // Показывать выходные по умолчанию?
+            let showWeekends = false;
+            
+            // Загрузка данных
+            loadTimeSlots();
+            generateSlotsView();
+            loadAppointments();
+            updateStats();
+            
+            // Установка минимальной даты как сегодняшней
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('selectedDate').setAttribute('min', today);
+            document.getElementById('searchDate').setAttribute('min', today);
+            document.getElementById('customSlotDate').setAttribute('min', today);
+            
+            // Обработчики событий
+            document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveAppointment();
+            });
+            
+            document.getElementById('addTimeSlotBtn').addEventListener('click', function() {
+                addTimeSlot();
+            });
+            
+            document.getElementById('addCustomSlotBtn').addEventListener('click', function() {
+                addCustomSlot();
+            });
+            
+            document.getElementById('clearTimeSlotsBtn').addEventListener('click', function() {
+                if (confirm('Сбросить временные слоты к стандартным (09:00 и 14:00)?')) {
+                    localStorage.setItem('timeSlots', JSON.stringify(['09:00', '14:00']));
+                    localStorage.setItem('customSlots', JSON.stringify({}));
+                    loadTimeSlots();
+                    generateSlotsView();
+                }
+            });
+            
+            document.getElementById('searchBtn').addEventListener('click', function() {
+                searchByDate();
+            });
+            
+            document.getElementById('showAllBtn').addEventListener('click', function() {
+                loadAppointments();
+            });
+            
+            document.getElementById('clearStorageBtn').addEventListener('click', function() {
+                if (confirm('Вы уверены, что хотите удалить все данные? Это действие нельзя отменить.')) {
+                    clearStorage();
+                }
+            });
+            
+            document.getElementById('prevWeekBtn').addEventListener('click', function() {
+                currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+                generateSlotsView();
+            });
+            
+            document.getElementById('nextWeekBtn').addEventListener('click', function() {
+                currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+                generateSlotsView();
+            });
+            
+            document.getElementById('cancelEditBtn').addEventListener('click', function() {
+                cancelEdit();
+            });
+            
+            document.getElementById('showWeekendsToggle').addEventListener('change', function() {
+                showWeekends = this.checked;
+                generateSlotsView();
+            });
+            
+            // Функция загрузки временных слотов
+            function loadTimeSlots() {
+                const timeSlots = JSON.parse(localStorage.getItem('timeSlots'));
+                const container = document.getElementById('timeSlotsContainer');
+                container.innerHTML = '';
+                
+                timeSlots.forEach(slot => {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-primary slot-badge';
+                    badge.textContent = slot;
+                    badge.setAttribute('data-time', slot);
+                    badge.addEventListener('click', function() {
+                        document.getElementById('selectedTime').value = slot;
+                    });
+                    container.appendChild(badge);
+                });
+            }
+            
+            // Функция добавления временного слота
+            function addTimeSlot() {
+                const newTime = document.getElementById('newTimeSlot').value;
+                if (!newTime) {
+                    alert('Пожалуйста, введите время');
+                    return;
+                }
+                
+                const timeSlots = JSON.parse(localStorage.getItem('timeSlots'));
+                if (timeSlots.includes(newTime)) {
+                    alert('Это время уже существует в списке');
+                    return;
+                }
+                
+                timeSlots.push(newTime);
+                localStorage.setItem('timeSlots', JSON.stringify(timeSlots));
+                loadTimeSlots();
+                generateSlotsView();
+                document.getElementById('newTimeSlot').value = '';
+            }
+            
+            // Функция добавления кастомного слота для конкретной даты
+            function addCustomSlot() {
+                const date = document.getElementById('customSlotDate').value;
+                const time = document.getElementById('customSlotTime').value;
+                
+                if (!date || !time) {
+                    alert('Пожалуйста, выберите дату и время');
+                    return;
+                }
+                
+                const customSlots = JSON.parse(localStorage.getItem('customSlots'));
+                
+                if (!customSlots[date]) {
+                    customSlots[date] = [];
+                }
+                
+                if (customSlots[date].includes(time)) {
+                    alert('Это время уже добавлено для выбранной даты');
+                    return;
+                }
+                
+                customSlots[date].push(time);
+                localStorage.setItem('customSlots', JSON.stringify(customSlots));
+                
+                generateSlotsView();
+                document.getElementById('customSlotTime').value = '';
+                
+                alert(`Слот ${time} добавлен для даты ${formatDate(date)}`);
+            }
+            
+            // Функция генерации представления слотов
+            function generateSlotsView() {
+                const slotsGrid = document.getElementById('slotsGrid');
+                slotsGrid.innerHTML = '';
+                
+                // Обновление заголовка с диапазоном дат
+                const weekEnd = new Date(currentWeekStart);
+                weekEnd.setDate(currentWeekStart.getDate() + 6);
+                
+                const options = { day: 'numeric', month: 'long' };
+                const startStr = currentWeekStart.toLocaleDateString('ru-RU', options);
+                const endStr = weekEnd.toLocaleDateString('ru-RU', options);
+                
+                document.getElementById('currentWeekRange').textContent = 
+                    `${startStr} - ${endStr}`;
+                
+                // Получение всех записей
+                const appointments = JSON.parse(localStorage.getItem('appointments'));
+                const timeSlots = JSON.parse(localStorage.getItem('timeSlots'));
+                const customSlots = JSON.parse(localStorage.getItem('customSlots'));
+                
+                // Генерация дней недели
+                for (let i = 0; i < 7; i++) {
+                    const dayDate = new Date(currentWeekStart);
+                    dayDate.setDate(currentWeekStart.getDate() + i);
+                    
+                    // Пропускаем выходные, если они скрыты
+                    const isWeekend = i === 5 || i === 6;
+                    if (isWeekend && !showWeekends) continue;
+                    
+                    const dayStr = dayDate.toISOString().split('T')[0];
+                    const isToday = dayStr === new Date().toISOString().split('T')[0];
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = `day-column ${isWeekend ? 'weekend' : ''} ${isToday ? 'current-date' : ''}`;
+                    
+                    // Создаем заголовок дня
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = `day-header ${isToday ? 'today-header' : ''} ${isWeekend ? 'weekend-header' : ''}`;
+                    
+                    const dayTitle = document.createElement('div');
+                    dayTitle.className = 'day-title';
+                    
+                    const shortDayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+                    // Формат: "Пн, 12.03"
+                    dayTitle.textContent = `${shortDayNames[i]}, ${dayDate.getDate()}.${String(dayDate.getMonth() + 1).padStart(2, '0')}`;
+                    
+                    // Кнопка добавления слота для этого дня
+                    const addSlotBtn = document.createElement('button');
+                    addSlotBtn.className = 'btn btn-sm btn-outline-primary add-slot-btn';
+                    addSlotBtn.innerHTML = '<i class="bi bi-plus"></i>';
+                    addSlotBtn.title = 'Добавить слот для этой даты';
+                    addSlotBtn.addEventListener('click', function() {
+                        document.getElementById('customSlotDate').value = dayStr;
+                        document.getElementById('customSlotTime').focus();
+                    });
+                    
+                    dayHeader.appendChild(dayTitle);
+                    dayHeader.appendChild(addSlotBtn);
+                    dayElement.appendChild(dayHeader);
+                    
+                    // Получаем все слоты для этого дня (стандартные + кастомные)
+                    const daySlots = [...timeSlots];
+                    if (customSlots[dayStr]) {
+                        customSlots[dayStr].forEach(slot => {
+                            if (!daySlots.includes(slot)) {
+                                daySlots.push(slot);
+                            }
+                        });
+                    }
+                    
+                    // Сортируем слоты по времени
+                    daySlots.sort();
+                    
+                    // Добавление временных слотов для этого дня
+                    daySlots.forEach(slot => {
+                        const slotAppointments = appointments.filter(a => a.date === dayStr && a.time === slot);
+                        const isBusy = slotAppointments.length > 0;
+                        const isCustom = customSlots[dayStr] && customSlots[dayStr].includes(slot);
+                        
+                        const slotElement = document.createElement('div');
+                        slotElement.className = `time-slot ${isBusy ? 'busy' : 'free'} ${isCustom ? 'custom-slot' : ''}`;
+                        slotElement.setAttribute('data-date', dayStr);
+                        slotElement.setAttribute('data-time', slot);
+                        
+                        const timeElement = document.createElement('div');
+                        timeElement.textContent = slot;
+                        timeElement.style.fontWeight = 'bold';
+                        slotElement.appendChild(timeElement);
+                        
+                        if (isBusy) {
+                            const infoElement = document.createElement('div');
+                            infoElement.className = 'appointment-info';
+                            infoElement.textContent = `${slotAppointments[0].carBrand} ${slotAppointments[0].carModel}`;
+                            slotElement.appendChild(infoElement);
+                            
+                            slotElement.addEventListener('click', function() {
+                                editAppointment(slotAppointments[0]);
+                            });
+                        } else {
+                            slotElement.addEventListener('click', function() {
+                                document.getElementById('selectedDate').value = dayStr;
+                                document.getElementById('selectedTime').value = slot;
+                                document.getElementById('carBrand').focus();
+                            });
+                        }
+                        
+                        dayElement.appendChild(slotElement);
+                    });
+                    
+                    slotsGrid.appendChild(dayElement);
+                }
+            }
+            
+            // Функция загрузки записей
+            function loadAppointments() {
+                const appointments = JSON.parse(localStorage.getItem('appointments'));
+                const table = document.getElementById('recordsTable');
+                table.innerHTML = '';
+                
+                appointments.sort((a, b) => {
+                    const dateA = new Date(a.date + 'T' + a.time);
+                    const dateB = new Date(b.date + 'T' + b.time);
+                    return dateA - dateB;
+                });
+                
+                appointments.forEach((appointment, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formatDate(appointment.date)}</td>
+                        <td>${appointment.time}</td>
+                        <td>${appointment.carBrand}</td>
+                        <td>${appointment.carModel}</td>
+                        <td>${appointment.clientName}</td>
+                        <td>${appointment.phone}</td>
+                        <td>${appointment.comment || ''}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info edit-btn" data-index="${index}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-index="${index}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    table.appendChild(row);
+                });
+                
+                // Добавляем обработчики для кнопок
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        const appointments = JSON.parse(localStorage.getItem('appointments'));
+                        editAppointment(appointments[index]);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        deleteAppointment(index);
+                    });
+                });
+            }
+            
+            // Функция сохранения записи
+            function saveAppointment() {
+                const appointment = {
+                    date: document.getElementById('selectedDate').value,
+                    time: document.getElementById('selectedTime').value,
+                    carBrand: document.getElementById('carBrand').value,
+                    carModel: document.getElementById('carModel').value,
+                    clientName: document.getElementById('clientName').value,
+                    phone: document.getElementById('phone').value,
+                    comment: document.getElementById('comment').value
+                };
+                
+                if (!appointment.date || !appointment.time) {
+                    alert('Пожалуйста, заполните дату и время');
+                    return;
+                }
+                
+                const appointments = JSON.parse(localStorage.getItem('appointments'));
+                const editIndex = document.getElementById('editIndex').value;
+                
+                if (editIndex !== "-1") {
+                    // Редактирование существующей записи
+                    appointments[editIndex] = appointment;
+                } else {
+                    // Добавление новой записи
+                    // Проверка на конфликт времени
+                    const conflict = appointments.find(a => a.date === appointment.date && a.time === appointment.time);
+                    if (conflict) {
+                        alert('На это время уже есть запись!');
+                        return;
+                    }
+                    
+                    appointments.push(appointment);
+                }
+                
+                localStorage.setItem('appointments', JSON.stringify(appointments));
+                
+                // Сброс формы
+                cancelEdit();
+                
+                // Обновление интерфейса
+                generateSlotsView();
+                loadAppointments();
+                updateStats();
+                
+                alert('Запись успешно сохранена!');
+            }
+            
+            // Функция редактирования записи
+            function editAppointment(appointment) {
+                document.getElementById('editIndex').value = findAppointmentIndex(appointment);
+                document.getElementById('selectedDate').value = appointment.date;
+                document.getElementById('selectedTime').value = appointment.time;
+                document.getElementById('carBrand').value = appointment.carBrand;
+                document.getElementById('carModel').value = appointment.carModel;
+                document.getElementById('clientName').value = appointment.clientName;
+                document.getElementById('phone').value = appointment.phone;
+                document.getElementById('comment').value = appointment.comment || '';
+                
+                document.getElementById('submitBtn').innerHTML = '<i class="bi bi-check-circle"></i> Сохранить изменения';
+                document.getElementById('cancelEditBtn').style.display = 'block';
+                document.getElementById('submitBtn').classList.remove('btn-primary');
+                document.getElementById('submitBtn').classList.add('btn-warning');
+                
+                // Прокрутка к форме
+                document.getElementById('appointmentForm').scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            // Функция отмены редактирования
+            function cancelEdit() {
+                document.getElementById('editIndex').value = "-1";
+                document.getElementById('appointmentForm').reset();
+                
+                document.getElementById('submitBtn').innerHTML = '<i class="bi bi-check-circle"></i> Добавить запись';
+                document.getElementById('cancelEditBtn').style.display = 'none';
+                document.getElementById('submitBtn').classList.remove('btn-warning');
+                document.getElementById('submitBtn').classList.add('btn-primary');
+            }
+            
+            // Функция поиска индекса записи
+            function findAppointmentIndex(appointment) {
+                const appointments = JSON.parse(localStorage.getItem('appointments'));
+                return appointments.findIndex(a => 
+                    a.date === appointment.date && 
+                    a.time === appointment.time &&
+                    a.clientName === appointment.clientName
+                );
+            }
+            
+            // Функция удаления записи
+            function deleteAppointment(index) {
+                if (confirm('Вы уверены, что хотите удалить эту запись?')) {
+                    const appointments = JSON.parse(localStorage.getItem('appointments'));
+                    appointments.splice(index, 1);
+                    localStorage.setItem('appointments', JSON.stringify(appointments));
+                    generateSlotsView();
+                    loadAppointments();
+                    updateStats();
+                    
+                    // Если удаляем редактируемую запись, отменяем редактирование
+                    if (document.getElementById('editIndex').value === index.toString()) {
+                        cancelEdit();
+                    }
+                }
+            }
+            
+            // Функция поиска по дате
+            function searchByDate() {
+                const searchDate = document.getElementById('searchDate').value;
+                if (!searchDate) {
+                    loadAppointments();
+                    return;
+                }
+                
+                const appointments = JSON.parse(localStorage.getItem('appointments'));
+                const filteredAppointments = appointments.filter(a => a.date === searchDate);
+                
+                const table = document.getElementById('recordsTable');
+                table.innerHTML = '';
+                
+                filteredAppointments.forEach((appointment, index) => {
+                    const originalIndex = findAppointmentIndex(appointment);
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formatDate(appointment.date)}</td>
+                        <td>${appointment.time}</td>
+                        <td>${appointment.carBrand}</td>
+                        <td>${appointment.carModel}</td>
+                        <td>${appointment.clientName}</td>
+                        <td>${appointment.phone}</td>
+                        <td>${appointment.comment || ''}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info edit-btn" data-index="${originalIndex}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-index="${originalIndex}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    table.appendChild(row);
+                });
+                
+                // Добавляем обработчики для кнопок
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        const appointments = JSON.parse(localStorage.getItem('appointments'));
+                        editAppointment(appointments[index]);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        deleteAppointment(index);
+                    });
+                });
+            }
+            
+            // Функция обновления статистики
+            function updateStats() {
+                const appointments = JSON.parse(localStorage.getItem('appointments'));
+                document.getElementById('totalRecords').textContent = appointments.length;
+                
+                const today = new Date().toISOString().split('T')[0];
+                const todayCount = appointments.filter(a => a.date === today).length;
+                document.getElementById('todayRecords').textContent = todayCount;
+            }
+            
+            // Функция очистки хранилища
+            function clearStorage() {
+                localStorage.removeItem('appointments');
+                localStorage.removeItem('customSlots');
+                localStorage.setItem('appointments', JSON.stringify([]));
+                localStorage.setItem('customSlots', JSON.stringify({}));
+                generateSlotsView();
+                loadAppointments();
+                updateStats();
+                cancelEdit();
+                alert('Все данные были удалены');
+            }
+            
+            // Вспомогательная функция для форматирования дата
+            function formatDate(dateString) {
+                const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                return new Date(dateString).toLocaleDateString('ru-RU', options);
+            }
+        });
+    </script>
+</body>
+</html>
